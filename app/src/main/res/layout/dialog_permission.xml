@@ -1,62 +1,67 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    android:background="@color/surface">
 
   <ScrollView
-      android:layout_width="wrap_content"
+      android:layout_width="match_parent"
       android:layout_height="0dp"
       android:layout_weight="1"
       android:clipToPadding="false"
-      android:paddingHorizontal="32dp"
-      android:paddingVertical="24dp"
+      android:paddingHorizontal="24dp"
+      android:paddingTop="24dp"
+      android:paddingBottom="16dp"
       android:scrollbarStyle="insideInset">
 
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/dialog_permission_explanation"
-        android:textSize="20sp" />
+        android:textColor="@color/on_surface"
+        android:textSize="16sp"
+        android:lineHeight="24sp"
+        android:fontFamily="sans-serif" />
   </ScrollView>
 
   <View
       android:layout_width="match_parent"
       android:layout_height="1dp"
-      android:background="@drawable/text_color_tertiary_shape" />
+      android:background="@color/outline"
+      android:alpha="0.3" />
 
   <LinearLayout
       android:layout_width="match_parent"
       android:layout_height="wrap_content"
-      android:orientation="horizontal">
+      android:orientation="horizontal"
+      android:paddingVertical="8dp"
+      android:paddingHorizontal="8dp">
 
-    <TextView
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/dialog_permission_button_cancel"
-        android:layout_width="wrap_content"
-        android:layout_height="match_parent"
-        android:background="?selectableItemBackground"
-        android:gravity="center_vertical"
-        android:padding="16dp"
-        android:text="@string/dialog_permission_button_cancel"
-        android:textColor="@color/dialog_permission_button_text"
-        android:textSize="24sp" />
-
-    <View
-        android:layout_width="1dp"
-        android:layout_height="match_parent"
-        android:background="@drawable/text_color_tertiary_shape" />
-
-    <!-- wrap_content height on this View
-    because it will always have the maximum height over its siblings. -->
-    <TextView
-        android:id="@+id/dialog_permission_button_confirm"
-        android:layout_width="match_parent"
+        style="@style/Widget.Material3.Button.TextButton"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:background="?selectableItemBackground"
-        android:gravity="center"
-        android:padding="16dp"
+        android:layout_weight="1"
+        android:layout_marginEnd="8dp"
+        android:text="@string/dialog_permission_button_cancel"
+        android:textColor="@color/on_surface_variant"
+        android:textSize="15sp"
+        app:cornerRadius="12dp" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/dialog_permission_button_confirm"
+        style="@style/Widget.Material3.Button"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:layout_marginStart="8dp"
         android:text="@string/dialog_permission_button_confirm"
-        android:textColor="@color/dialog_permission_button_text"
-        android:textSize="24sp" />
+        android:backgroundTint="@color/accent"
+        android:textColor="#FFFFFF"
+        android:textSize="15sp"
+        app:cornerRadius="12dp" />
   </LinearLayout>
 </LinearLayout>

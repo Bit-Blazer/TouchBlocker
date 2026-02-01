@@ -1,4 +1,4 @@
-package com.nightlynexus.touchblocker
+package com.bitblazer.touchblocker
 
 import android.app.Activity
 import android.app.AlertDialog
@@ -12,37 +12,53 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.annotation.StringRes
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import com.nightlynexus.featureunlocker.FeatureUnlocker
 
 class LauncherActivity : Activity(), FloatingViewStatus.Listener {
   private lateinit var floatingViewStatus: FloatingViewStatus
   private lateinit var keepScreenOnStatus: KeepScreenOnStatus
   private lateinit var changeScreenBrightnessStatus: ChangeScreenBrightnessStatus
+  private lateinit var unlockMethodStatus: UnlockMethodStatus
   private lateinit var accessibilityPermissionRequestTracker: AccessibilityPermissionRequestTracker
-  private lateinit var featureUnlocker: FeatureUnlocker
   private lateinit var brandIcon: View
   private lateinit var enableButton: TextView
   private lateinit var keepScreenOnCheckBox: CompoundButton
   private lateinit var changeScreenBrightnessCheckBox: CompoundButton
+  private lateinit var useSimpleUnlockCheckBox: CompoundButton
   private lateinit var assistantCheckBox: CompoundButton
+
+  private val PREFS_NAME = "TouchBlockerPrefs"
+  private val KEY_FIRST_RUN = "first_run"
 
   override fun onCreate(savedInstanceState: Bundle?) {
     val application = application as TouchBlockerApplication
     floatingViewStatus = application.floatingViewStatus
     keepScreenOnStatus = application.keepScreenOnStatus
     changeScreenBrightnessStatus = application.changeScreenBrightnessStatus
+    unlockMethodStatus = application.unlockMethodStatus
     accessibilityPermissionRequestTracker = application.accessibilityPermissionRequestTracker
-    featureUnlocker = application.featureUnlocker
 
     installSplashScreen()
 
     super.onCreate(savedInstanceState)
     setContentView(R.layout.activity_launcher)
+    
+    // Handle shortcut intent
+    if (intent?.getBooleanExtra("enable_blocker", false) == true) {
+      if (floatingViewStatus.permissionGranted && !floatingViewStatus.added) {
+        floatingViewStatus.setAdded(true)
+      }
+    }
+    
     brandIcon = findViewById(R.id.brand_icon)
     enableButton = findViewById(R.id.enable)
     keepScreenOnCheckBox = findViewById(R.id.keep_screen_on)
     changeScreenBrightnessCheckBox = findViewById(R.id.change_screen_brightness)
+    useSimpleUnlockCheckBox = findViewById(R.id.use_simple_unlock)
     assistantCheckBox = findViewById(R.id.enable_assistant)
+    
+    findViewById<View>(R.id.info_button).setOnClickListener {
+      showTutorialDialog()
+    }
     if (floatingViewStatus.added) {
       onFloatingViewAdded()
     } else if (floatingViewStatus.permissionGranted) {
@@ -61,12 +77,7 @@ class LauncherActivity : Activity(), FloatingViewStatus.Listener {
       if (keepScreenOnCheckBox.tag != null) {
         return@setOnCheckedChangeListener
       }
-      if (featureUnlocker.state != FeatureUnlocker.State.Purchased) {
-        setKeepScreenOnCheckboxCheckedWithoutCallingListener(false)
-        featureUnlocker.buy(this)
-      } else {
-        keepScreenOnStatus.setKeepScreenOn(isChecked)
-      }
+      keepScreenOnStatus.setKeepScreenOn(isChecked)
     }
     changeScreenBrightnessCheckBox.isChecked =
       changeScreenBrightnessStatus.getChangeScreenBrightness()
@@ -74,12 +85,15 @@ class LauncherActivity : Activity(), FloatingViewStatus.Listener {
       if (changeScreenBrightnessCheckBox.tag != null) {
         return@setOnCheckedChangeListener
       }
-      if (featureUnlocker.state != FeatureUnlocker.State.Purchased) {
-        setChangeScreenBrightnessCheckboxCheckedWithoutCallingListener(false)
-        featureUnlocker.buy(this)
-      } else {
-        changeScreenBrightnessStatus.setChangeScreenBrightness(isChecked)
+      changeScreenBrightnessStatus.setChangeScreenBrightness(isChecked)
+    }
+    useSimpleUnlockCheckBox.isChecked =
+      unlockMethodStatus.getUseSimpleUnlock()
+    useSimpleUnlockCheckBox.setOnCheckedChangeListener { _, isChecked ->
+      if (useSimpleUnlockCheckBox.tag != null) {
+        return@setOnCheckedChangeListener
       }
+      unlockMethodStatus.setUseSimpleUnlock(isChecked)
     }
     assistantCheckBox.isChecked = isDefaultAssistant()
     assistantCheckBox.setOnClickListener {
@@ -94,6 +108,14 @@ class LauncherActivity : Activity(), FloatingViewStatus.Listener {
     floatingViewStatus.addListener(this)
     keepScreenOnStatus.addListener(keepScreenOnStatusListener)
     changeScreenBrightnessStatus.addListener(changeScreenBrightnessStatusListener)
+    unlockMethodStatus.addListener(unlockMethodStatusListener)
+    
+    // Show tutorial on first run
+    val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
+    if (prefs.getBoolean(KEY_FIRST_RUN, true)) {
+      showTutorialDialog()
+      prefs.edit().putBoolean(KEY_FIRST_RUN, false).apply()
+    }
   }
 
   override fun onDestroy() {
@@ -101,6 +123,7 @@ class LauncherActivity : Activity(), FloatingViewStatus.Listener {
     floatingViewStatus.removeListener(this)
     keepScreenOnStatus.removeListener(keepScreenOnStatusListener)
     changeScreenBrightnessStatus.removeListener(changeScreenBrightnessStatusListener)
+    unlockMethodStatus.removeListener(unlockMethodStatusListener)
   }
 
   override fun onFloatingViewAdded() {
@@ -141,6 +164,16 @@ class LauncherActivity : Activity(), FloatingViewStatus.Listener {
     }
   }
 
+  private fun showTutorialDialog() {
+    val alertDialog = AlertDialog.Builder(this, R.style.DialogPermissionStyle)
+      .setView(R.layout.dialog_tutorial)
+      .setCancelable(false)
+      .show()
+    alertDialog.findViewById<View>(R.id.tutorial_got_it_button)!!.setOnClickListener {
+      alertDialog.dismiss()
+    }
+  }
+
   private fun requestPermission() {
     accessibilityPermissionRequestTracker.recordAccessibilityPermissionRequest()
     startActivity(
@@ -171,6 +204,13 @@ class LauncherActivity : Activity(), FloatingViewStatus.Listener {
       }
     }
 
+  private val unlockMethodStatusListener =
+    object : UnlockMethodStatus.Listener {
+      override fun update(useSimpleUnlock: Boolean) {
+        setUseSimpleUnlockCheckboxCheckedWithoutCallingListener(useSimpleUnlock)
+      }
+    }
+
   private fun setKeepScreenOnCheckboxCheckedWithoutCallingListener(checked: Boolean) {
     keepScreenOnCheckBox.tag = true
     keepScreenOnCheckBox.isChecked = checked
@@ -181,6 +221,12 @@ class LauncherActivity : Activity(), FloatingViewStatus.Listener {
     changeScreenBrightnessCheckBox.tag = true
     changeScreenBrightnessCheckBox.isChecked = checked
     changeScreenBrightnessCheckBox.tag = null
+  }
+
+  private fun setUseSimpleUnlockCheckboxCheckedWithoutCallingListener(checked: Boolean) {
+    useSimpleUnlockCheckBox.tag = true
+    useSimpleUnlockCheckBox.isChecked = checked
+    useSimpleUnlockCheckBox.tag = null
   }
 
   override fun onResume() {

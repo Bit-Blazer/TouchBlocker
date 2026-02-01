@@ -1,4 +1,4 @@
-package com.nightlynexus.touchblocker
+package com.bitblazer.touchblocker
 
 import android.annotation.SuppressLint
 import android.content.Context
@@ -18,11 +18,13 @@ internal class FloatingBackgroundView(
   private val backgroundToastFadeOutDurationMillis: Long,
   private val backgroundToastFadeOutDelayMillis: Long,
   private var screenOn: Boolean,
+  private val unlockMethodStatus: UnlockMethodStatus
 ) : FrameLayout(context) {
   private var backgroundToastView: View
   private var locked = false
   private var hasShownToast = false
   private var backgroundToastViewAlphaAnimator: ViewPropertyAnimator? = null
+  internal val circlePathView: CirclePathView
 
   init {
     val inflater = LayoutInflater.from(context)
@@ -38,6 +40,14 @@ internal class FloatingBackgroundView(
     backgroundToastView.alpha = 0f
     backgroundToastView.visibility = View.GONE
     addView(backgroundToastView)
+
+    // Add circle path view for visual feedback
+    circlePathView = CirclePathView(context)
+    circlePathView.layoutParams = LayoutParams(
+      LayoutParams.MATCH_PARENT,
+      LayoutParams.MATCH_PARENT
+    )
+    addView(circlePathView)
 
     visibility = GONE
   }
@@ -78,6 +88,14 @@ internal class FloatingBackgroundView(
     if (hasShownToast) {
       return
     }
+    // Update toast text based on unlock method
+    val textResId = if (unlockMethodStatus.getUseSimpleUnlock()) {
+      R.string.lock_background_toast_simple
+    } else {
+      R.string.lock_background_toast_circle
+    }
+    backgroundToastView.findViewById<android.widget.TextView>(android.R.id.text1).setText(textResId)
+    
     backgroundToastView.visibility = VISIBLE
     backgroundToastViewAlphaAnimator = backgroundToastView.animate()
       .alpha(1f)

@@ -2,7 +2,8 @@
 <resources>
   <string name="lock_content_description_unlocked">Lock</string>
   <string name="lock_content_description_locked">Unlock</string>
-  <string name="lock_background_toast">To unhide the unlock\u00A0button,\n<b>double tap</b> the screen</string>
+  <string name="lock_background_toast_circle">To unhide the unlock\u00A0button,\n<b>draw a circle</b> on the screen</string>
+  <string name="lock_background_toast_simple">To unhide the unlock\u00A0button,\n<b>tap 3 times</b> on the screen</string>
 
   <color name="lock_background">#88224488</color>
   <color name="lock_background_ripple">#FFFFFF</color>

@@ -8,30 +8,54 @@
   </style>
 
   <style name="Launcher" parent="Theme.Material3.Dark.NoActionBar">
-    <item name="colorPrimary">@color/primary</item>
-    <item name="colorAccent">@color/accent</item>
+    <item name="colorPrimary">@color/accent</item>
+    <item name="colorOnPrimary">#FFFFFF</item>
+    <item name="colorSecondary">@color/accent_light</item>
+    <item name="colorSurface">@color/surface</item>
+    <item name="colorOnSurface">@color/on_surface</item>
+    <item name="colorOnSurfaceVariant">@color/on_surface_variant</item>
+    <item name="colorOutline">@color/outline</item>
     <item name="android:windowBackground">@color/window_background</item>
+    <item name="android:statusBarColor">@color/surface</item>
+    <item name="android:navigationBarColor">@color/surface</item>
   </style>
 
-  <style name="EnableButton">
-    <item name="colorControlHighlight">@color/enable_button_ripple</item>
+  <style name="EnableButton" parent="Widget.Material3.Button.ElevatedButton">
+    <item name="cornerRadius">16dp</item>
+    <item name="elevation">4dp</item>
   </style>
 
-  <string name="enable_button_accessibility_service">Grant permission\nfor screen overlay</string>
-  <string name="enable_button_add_floating">Enable</string>
-  <string name="enable_button_remove_floating">Remove for now</string>
-  <string name="keep_screen_on"><b>Premium Feature</b>\nKeep screen on\nindefinitely while blocking touches</string>
-  <string name="change_screen_brightness"><b>Premium Feature</b>\nDim screen\nwhile blocking touches</string>
-  <string name="enable_assistant">Toggle touch blocking with the assistant button\n(long-press the power button on Pixel devices)</string>
+  <style name="FeatureCard">
+    <item name="android:background">@drawable/card_background</item>
+    <item name="android:elevation">2dp</item>
+  </style>
+
+  <string name="enable_button_accessibility_service">Grant Permission</string>
+  <string name="enable_button_add_floating">Enable Touch Blocker</string>
+  <string name="enable_button_remove_floating">Disable</string>
+  <string name="keep_screen_on">Keep screen on while blocking touches</string>
+  <string name="change_screen_brightness">Dim screen while blocking touches</string>
+  <string name="use_simple_unlock">Use simple unlock (3 taps instead of circle gesture)</string>
+  <string name="enable_assistant">Toggle with assistant button (long-press power on Pixel)</string>
   <string name="enable_assistant_toast">Set Touch\u00A0Blocker as the default assistant app</string>
   <string name="enable_assistant_toast_disable">Change the default assistant app</string>
   <string name="brand_icon_content_description">Touch Blocker icon</string>
-  <string name="footer">An app by Eric Cochran</string>
+  <string name="info_button_description">Show tutorial</string>
 
-  <color name="primary">#111133</color>
-  <color name="accent">#4499FF</color>
-  <color name="window_background">@color/primary</color>
+  <color name="primary">#1C1B1F</color>
+  <color name="accent">#6750A4</color>
+  <color name="accent_light">#7F67BE</color>
+  <color name="surface">#1C1B1F</color>
+  <color name="surface_variant">#49454F</color>
+  <color name="on_surface">#E6E1E5</color>
+  <color name="on_surface_variant">#CAC4D0</color>
+  <color name="outline">#938F99</color>
+  <color name="window_background">@color/surface</color>
   <color name="enable_button_background_tint">@color/accent</color>
-  <color name="enable_button_ripple">@color/window_background</color>
+  <color name="enable_button_ripple">#7F67BE</color>
   <color name="enable_button_text">#FFFFFF</color>
+  <color name="card_background">#2B2930</color>
+
+  <string name="shortcut_enable_label">Enable Blocker</string>
+  <string name="shortcut_enable_long_label">Enable Touch Blocker</string>
 </resources>

@@ -16,9 +16,10 @@ buildscript {
           recyclerview: '1.4.0',
           recyclerviewSelection: '1.1.0',
           savedstate: '1.4.0',
-          splashscreen: '1.0.1'
+          splashscreen: '1.0.1',
+          constraintlayout: '2.1.4',
+          cardview: '1.0.0'
       ],
-      billing: '7.1.1',
       compileSdk: 36,
       coroutines: '1.10.2',
       dagger: '2.56.2',
@@ -59,10 +60,11 @@ buildscript {
           recyclerview: "androidx.recyclerview:recyclerview:$versions.androidx.recyclerview",
           recyclerviewSelection: "androidx.recyclerview:recyclerview-selection:$versions.androidx.recyclerviewSelection",
           savedstate: "androidx.savedstate:savedstate-ktx:$versions.androidx.savedstate",
-          splashscreen: "androidx.core:core-splashscreen:$versions.androidx.splashscreen"
+          splashscreen: "androidx.core:core-splashscreen:$versions.androidx.splashscreen",
+          constraintlayout: "androidx.constraintlayout:constraintlayout:$versions.androidx.constraintlayout",
+          cardview: "androidx.cardview:cardview:$versions.androidx.cardview"
       ],
       androidGradlePlugin: "com.android.tools.build:gradle:$versions.androidGradlePlugin",
-      billing: "com.android.billingclient:billing-ktx:$versions.billing",
       dagger: [
           compiler: "com.google.dagger:dagger-compiler:$versions.dagger",
           runtime: "com.google.dagger:dagger:$versions.dagger"

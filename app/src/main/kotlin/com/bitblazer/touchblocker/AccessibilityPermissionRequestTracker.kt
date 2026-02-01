@@ -1,4 +1,4 @@
-package com.nightlynexus.touchblocker
+package com.bitblazer.touchblocker
 
 import android.os.SystemClock
 

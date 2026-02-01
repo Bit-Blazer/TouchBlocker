@@ -1,4 +1,4 @@
-package com.nightlynexus.touchblocker
+package com.bitblazer.touchblocker
 
 import android.accessibilityservice.AccessibilityService
 import android.app.KeyguardManager
@@ -11,6 +11,8 @@ import android.graphics.PixelFormat
 import android.graphics.Point
 import android.os.Build.VERSION.SDK_INT
 import android.os.PowerManager
+import android.os.VibrationEffect
+import android.os.Vibrator
 import android.view.GestureDetector
 import android.view.GestureDetector.SimpleOnGestureListener
 import android.view.Gravity
@@ -23,23 +25,25 @@ import androidx.core.content.ContextCompat
 
 class TouchBlockerAccessibilityService : AccessibilityService(), FloatingViewStatus.Listener {
   private val ACTION_START_BLOCKING_TOUCHES =
-    "com.nightlynexus.touchblocker.ACTION_START_BLOCKING_TOUCHES"
+    "com.bitblazer.touchblocker.ACTION_START_BLOCKING_TOUCHES"
   private val ACTION_END_BLOCKING_TOUCHES =
-    "com.nightlynexus.touchblocker.ACTION_END_BLOCKING_TOUCHES"
+    "com.bitblazer.touchblocker.ACTION_END_BLOCKING_TOUCHES"
   private val ACTION_TOGGLE_BLOCKING_TOUCHES =
-    "com.nightlynexus.touchblocker.ACTION_TOGGLE_BLOCKING_TOUCHES"
+    "com.bitblazer.touchblocker.ACTION_TOGGLE_BLOCKING_TOUCHES"
   private val lockAnimateAlphaDelayMillis = 2000L
   private val lockAnimateAlphaPerSecond = 3f
   private val backgroundToastFadeInDurationMillis = 1000L
-  private val backgroundToastFadeOutDelayMillis = 4000L
+  private val backgroundToastFadeOutDelayMillis = 8000L
   private val backgroundToastFadeOutDurationMillis = 2500L
 
   private var connected = false
   private lateinit var floatingViewStatus: FloatingViewStatus
   private lateinit var keepScreenOnStatus: KeepScreenOnStatus
   private lateinit var changeScreenBrightnessStatus: ChangeScreenBrightnessStatus
+  private lateinit var unlockMethodStatus: UnlockMethodStatus
   private lateinit var accessibilityPermissionRequestTracker: AccessibilityPermissionRequestTracker
   private lateinit var windowManager: WindowManager
+  private lateinit var vibrator: Vibrator
   private lateinit var backgroundView: FloatingBackgroundView
   private lateinit var backgroundViewLayoutParams: WindowManager.LayoutParams
   private lateinit var lockView: FloatingLockView
@@ -50,7 +54,9 @@ class TouchBlockerAccessibilityService : AccessibilityService(), FloatingViewSta
     floatingViewStatus = application.floatingViewStatus
     keepScreenOnStatus = application.keepScreenOnStatus
     changeScreenBrightnessStatus = application.changeScreenBrightnessStatus
+    unlockMethodStatus = application.unlockMethodStatus
     accessibilityPermissionRequestTracker = application.accessibilityPermissionRequestTracker
+    vibrator = getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
   }
 
   override fun onFloatingViewAdded() {
@@ -146,16 +152,14 @@ class TouchBlockerAccessibilityService : AccessibilityService(), FloatingViewSta
       backgroundToastFadeInDurationMillis,
       backgroundToastFadeOutDurationMillis,
       backgroundToastFadeOutDelayMillis,
-      screenOn
+      screenOn,
+      unlockMethodStatus
     ).apply {
       setOnTouchListener(object : View.OnTouchListener {
-        private val gestureDetector = GestureDetector(
-          this@TouchBlockerAccessibilityService,
-          BackgroundViewOnGestureListener()
-        )
+        private val gestureListener = BackgroundViewOnGestureListener()
 
         override fun onTouch(v: View, event: MotionEvent): Boolean {
-          return gestureDetector.onTouchEvent(event)
+          return gestureListener.onTouchEvent(event)
         }
       })
     }
@@ -310,13 +314,120 @@ class TouchBlockerAccessibilityService : AccessibilityService(), FloatingViewSta
     unregisterReceiver(toggleBlockingTouchesBroadcastReceiver)
   }
 
-  private inner class BackgroundViewOnGestureListener : SimpleOnGestureListener() {
-    override fun onDoubleTapEvent(e: MotionEvent): Boolean {
-      if (e.actionMasked == MotionEvent.ACTION_UP) {
-        lockView.fadeIn()
-        return true
+  private inner class BackgroundViewOnGestureListener {
+    private val pathPoints = mutableListOf<Pair<Float, Float>>()
+    private var startX = 0f
+    private var startY = 0f
+    private var tapCount = 0
+    private var lastTapTime = 0L
+    private val tapTimeout = 500L
+    
+    fun onTouchEvent(event: MotionEvent): Boolean {
+      // Check which unlock method is active
+      val useSimpleUnlock = unlockMethodStatus.getUseSimpleUnlock()
+      
+      if (useSimpleUnlock) {
+        // Simple three-tap unlock
+        return handleSimpleTap(event)
+      } else {
+        // Circle gesture unlock
+        return handleCircleGesture(event)
       }
-      return false
+    }
+    
+    private fun handleSimpleTap(event: MotionEvent): Boolean {
+      if (event.actionMasked == MotionEvent.ACTION_DOWN) {
+        val currentTime = System.currentTimeMillis()
+        
+        if (currentTime - lastTapTime > tapTimeout) {
+          tapCount = 0
+        }
+        
+        tapCount++
+        lastTapTime = currentTime
+        
+        if (tapCount >= 3) {
+          // Haptic feedback
+          if (SDK_INT >= 26) {
+            vibrator.vibrate(VibrationEffect.createOneShot(50, VibrationEffect.DEFAULT_AMPLITUDE))
+          } else {
+            @Suppress("DEPRECATION")
+            vibrator.vibrate(50)
+          }
+          lockView.fadeIn()
+          tapCount = 0
+          return true
+        }
+      }
+      return true
+    }
+    
+    private fun handleCircleGesture(event: MotionEvent): Boolean {
+      when (event.actionMasked) {
+        MotionEvent.ACTION_DOWN -> {
+          pathPoints.clear()
+          backgroundView.circlePathView.clearPath()
+          startX = event.x
+          startY = event.y
+          pathPoints.add(Pair(event.x, event.y))
+          backgroundView.circlePathView.addPoint(event.x, event.y)
+        }
+        MotionEvent.ACTION_MOVE -> {
+          pathPoints.add(Pair(event.x, event.y))
+          backgroundView.circlePathView.addPoint(event.x, event.y)
+        }
+        MotionEvent.ACTION_UP -> {
+          if (isCircleGesture()) {
+            // Haptic feedback
+            if (SDK_INT >= 26) {
+              vibrator.vibrate(VibrationEffect.createOneShot(50, VibrationEffect.DEFAULT_AMPLITUDE))
+            } else {
+              @Suppress("DEPRECATION")
+              vibrator.vibrate(50)
+            }
+            lockView.fadeIn()
+            pathPoints.clear()
+            backgroundView.circlePathView.clearPath()
+            return true
+          }
+          pathPoints.clear()
+          backgroundView.circlePathView.clearPath()
+        }
+      }
+      return true
+    }
+    
+    private fun isCircleGesture(): Boolean {
+      if (pathPoints.size < 20) return false // Need enough points
+      
+      // Check if end point is close to start point (closed loop)
+      val endX = pathPoints.last().first
+      val endY = pathPoints.last().second
+      val distance = kotlin.math.sqrt(
+        (endX - startX) * (endX - startX) + (endY - startY) * (endY - startY)
+      )
+      
+      // Must end within 100dp of start to be considered closed
+      if (distance > 100 * resources.displayMetrics.density) return false
+      
+      // Calculate center point
+      val centerX = pathPoints.map { it.first }.average().toFloat()
+      val centerY = pathPoints.map { it.second }.average().toFloat()
+      
+      // Check if points are roughly equidistant from center (circular)
+      val distances = pathPoints.map { point ->
+        kotlin.math.sqrt(
+          (point.first - centerX) * (point.first - centerX) +
+          (point.second - centerY) * (point.second - centerY)
+        )
+      }
+      
+      val avgDistance = distances.average()
+      val variance = distances.map { (it - avgDistance) * (it - avgDistance) }.average()
+      val standardDeviation = kotlin.math.sqrt(variance)
+      
+      // If points are roughly circular, std deviation should be small relative to radius
+      return standardDeviation < avgDistance * 0.3 && avgDistance > 50 * resources.displayMetrics.density
     }
   }
 

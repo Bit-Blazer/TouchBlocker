@@ -8,7 +8,7 @@ apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 
 android {
-  namespace 'com.nightlynexus.touchblocker'
+  namespace 'com.bitblazer.touchblocker'
 
   compileSdk versions.compileSdk
 
@@ -45,32 +45,18 @@ android {
   buildTypes {
   }
 
-  productFlavors {
-    flavorDimensions = ['environment']
-
-    internal {
-      applicationIdSuffix '.internal'
-      versionNameSuffix '-internal'
-    }
-
-    production {
-    }
-  }
-
   applicationVariants.configureEach { variant ->
     variant.outputs.configureEach { output ->
       outputFileName = "Touch Blocker ${variant.versionCode}.apk"
-      if (variant.flavorName == 'internal') {
-        outputFileName = 'Internal ' + outputFileName
-      }
     }
   }
 }
 
 dependencies {
-  implementation project(':featureunlocker')
   implementation deps.androidx.splashscreen
   implementation deps.material
+  implementation deps.androidx.constraintlayout
+  implementation deps.androidx.cardview
   implementation deps.androidx.activity
   implementation deps.androidx.annotations
   implementation deps.androidx.appcompat
@@ -82,8 +68,6 @@ dependencies {
   implementation deps.androidx.lifecycleViewmodel
   implementation deps.androidx.savedstate
   implementation deps.kotlin.stdlibJdk8
-
-  internalImplementation deps.diskcrashreporter
 
   testImplementation deps.junit
   testImplementation deps.truth

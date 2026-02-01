@@ -1,4 +1,4 @@
-package com.nightlynexus.touchblocker
+package com.bitblazer.touchblocker
 
 internal class FloatingViewStatus(permissionGranted: Boolean) {
   interface Listener {

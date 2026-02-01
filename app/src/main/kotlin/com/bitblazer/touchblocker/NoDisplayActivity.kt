@@ -1,4 +1,4 @@
-package com.nightlynexus.touchblocker
+package com.bitblazer.touchblocker
 
 import android.app.Activity
 import android.content.Intent
@@ -11,8 +11,16 @@ class NoDisplayActivity : Activity() {
     val application = application as TouchBlockerApplication
     floatingViewStatus = application.floatingViewStatus
     super.onCreate(savedInstanceState)
+    
+    // Handle shortcut intent
+    val enableBlocker = intent?.getBooleanExtra("enable_blocker", false) == true
+    
     if (floatingViewStatus.permissionGranted) {
-      floatingViewStatus.toggle()
+      if (enableBlocker && !floatingViewStatus.added) {
+        floatingViewStatus.setAdded(true)
+      } else {
+        floatingViewStatus.toggle()
+      }
     } else {
       startActivity(
         accessibilityServicesSettingsIntent().addFlags(

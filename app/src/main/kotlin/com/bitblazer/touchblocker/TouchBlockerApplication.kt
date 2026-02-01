@@ -1,14 +1,13 @@
-package com.nightlynexus.touchblocker
+package com.bitblazer.touchblocker
 
 import android.app.Application
-import com.nightlynexus.featureunlocker.FeatureUnlocker
 
 class TouchBlockerApplication : Application() {
   internal lateinit var floatingViewStatus: FloatingViewStatus
   internal lateinit var keepScreenOnStatus: KeepScreenOnStatus
   internal lateinit var changeScreenBrightnessStatus: ChangeScreenBrightnessStatus
+  internal lateinit var unlockMethodStatus: UnlockMethodStatus
   internal lateinit var accessibilityPermissionRequestTracker: AccessibilityPermissionRequestTracker
-  internal lateinit var featureUnlocker: FeatureUnlocker
 
   override fun onCreate() {
     super.onCreate()
@@ -28,16 +27,12 @@ class TouchBlockerApplication : Application() {
         MODE_PRIVATE
       )
     )
+    unlockMethodStatus = UnlockMethodStatus(
+      getSharedPreferences(
+        "unlock_method_status",
+        MODE_PRIVATE
+      )
+    )
     accessibilityPermissionRequestTracker = AccessibilityPermissionRequestTracker()
-    featureUnlocker = provideFeatureUnlocker(this)
-    featureUnlocker.addListener(object : FeatureUnlocker.Listener {
-      override fun stateChanged(state: FeatureUnlocker.State) {
-        if (state !== FeatureUnlocker.State.Purchased) {
-          keepScreenOnStatus.setKeepScreenOn(false)
-          changeScreenBrightnessStatus.setChangeScreenBrightness(false)
-        }
-      }
-    })
-    featureUnlocker.startConnection()
   }
 }
